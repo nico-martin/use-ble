@@ -1,11 +1,12 @@
 import React from 'react';
-import PQueue from 'p-queue';
+import PromiseQueue from '../promiseQueue/queue';
 
-const bleQueue = new PQueue({ concurrency: 1 });
+const bleQueue = new PromiseQueue();
 
 export const useBleCharacteristic = (
   service: BluetoothRemoteGATTService,
-  characteristicUUID: BluetoothCharacteristicUUID
+  characteristicUUID: BluetoothCharacteristicUUID,
+  promiseQueueWriteOnlyLast: boolean = false
 ): {
   value: DataView;
   writeValue: (DataView) => void;
@@ -23,9 +24,17 @@ export const useBleCharacteristic = (
 
   const writeValue = async (data: DataView) => {
     if (characteristic?.properties?.writeWithoutResponse) {
-      await bleQueue.add(() => characteristic.writeValueWithoutResponse(data));
+      await bleQueue.add(
+        () => characteristic.writeValueWithoutResponse(data),
+        `${characteristicUUID}-write`,
+        promiseQueueWriteOnlyLast
+      );
     } else if (characteristic?.properties?.write) {
-      await bleQueue.add(() => characteristic.writeValueWithResponse(data));
+      await bleQueue.add(
+        () => characteristic.writeValueWithResponse(data),
+        `${characteristicUUID}-write`,
+        promiseQueueWriteOnlyLast
+      );
     } else {
       return new Error('"write" not available');
     }
@@ -33,7 +42,10 @@ export const useBleCharacteristic = (
 
   const readValue = async () => {
     if (characteristic?.properties?.read) {
-      const value = await bleQueue.add(() => characteristic.readValue());
+      const value = await bleQueue.add(
+        () => characteristic.readValue(),
+        `${characteristicUUID}-read`
+      );
       setValue(value);
       return value;
     }
@@ -46,7 +58,7 @@ export const useBleCharacteristic = (
     await bleQueue.add(async () => {
       characteristic.addEventListener('characteristicvaluechanged', listener);
       return await characteristic.startNotifications();
-    });
+    }, `${characteristicUUID}-notify-start`);
 
   const stopNotifications = async () =>
     await bleQueue.add(async () => {
@@ -55,7 +67,7 @@ export const useBleCharacteristic = (
         listener
       );
       return await characteristic.stopNotifications();
-    });
+    }, `${characteristicUUID}-notify-stop`);
 
   React.useEffect(() => {
     if (!characteristic) {

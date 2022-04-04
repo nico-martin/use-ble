@@ -1,6 +1,6 @@
 {
   "name": "use-ble",
-  "version": "0.0.0",
+  "version": "0.0.2",
   "description": "",
   "author": "nico_martin",
   "license": "MIT",
@@ -28,9 +28,7 @@
       "<rootDir>/dist/"
     ]
   },
-  "dependencies": {
-    "p-queue": "^7.2.0"
-  },
+  "dependencies": {},
   "peerDependencies": {
     "react": ">= 16.8.0",
     "react-dom": ">= 16.8.0"
