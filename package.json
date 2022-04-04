@@ -1,9 +1,10 @@
 {
   "name": "use-ble",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "",
   "author": "nico_martin",
   "license": "MIT",
+  "repository": "nico-martin/use-ble",
   "main": "dist/index.js",
   "engines": {
     "node": ">=8",
